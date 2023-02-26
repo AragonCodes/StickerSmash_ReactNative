@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button } from 'src/components/Button';
 import CircleButton from 'src/components/CircleButton';
@@ -10,6 +10,8 @@ import { pickImageAsync } from 'src/utils/pickImageAsync';
 import EmojiList from 'src/components/EmojiPicker/EmojiList';
 import EmojiSticker from 'src/components/EmojiSticker';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as MediaLibrary from 'expo-media-library';
+import { captureRef } from 'react-native-view-shot';
 
 const PLACEHOLDER_IMAGE = require('src/assets/images/background-image.png');
 
@@ -18,6 +20,14 @@ export default function App() {
   const [selectedImageUri, setSelectedImageUri] = useState('');
   const [isPhotoChosen, setIsPhotoChosen] = useState(false);
   const [isEmojiPickerModalShown, setIsEmojiPickerModalShown] = useState(false);
+
+  const imageRef = useRef<View>(null);
+
+  const [permissionStatus, requestPermission] = MediaLibrary.usePermissions();
+
+  if (permissionStatus === null) {
+    requestPermission();
+  }
 
   const handlePickImage = async () => {
     const images = await pickImageAsync();
@@ -52,17 +62,31 @@ export default function App() {
   };
 
   const handleSaveImageAsync = async () => {
-    // we will implement this later
+    try {
+      const localUri = await captureRef(imageRef, {
+        height: 440,
+        quality: 1,
+      });
+
+      await MediaLibrary.saveToLibraryAsync(localUri);
+      if (localUri) {
+        alert('Saved!');
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.imageContainer}>
-        <ImageViewer
-          sourceUri={selectedImageUri}
-          placeholderImage={PLACEHOLDER_IMAGE}
-        />
-        <EmojiSticker stickerSource={pickedEmoji} />
+        <View ref={imageRef} collapsable={false}>
+          <ImageViewer
+            sourceUri={selectedImageUri}
+            placeholderImage={PLACEHOLDER_IMAGE}
+          />
+          <EmojiSticker stickerSource={pickedEmoji} />
+        </View>
       </View>
       {isPhotoChosen ? (
         <View style={styles.optionsContainer}>
