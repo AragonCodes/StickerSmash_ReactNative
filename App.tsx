@@ -134,13 +134,13 @@ export default function App() {
           <Button label='Use this photo' onPress={handleChoosePhoto} />
         </View>
       )}
-      <StatusBar style='auto' />
       <BottomScreenModal
         isVisible={isEmojiPickerModalShown}
         onClose={handleEmojiPickerModalClose}
       >
         <EmojiList onSelect={handleEmojiSelection} />
       </BottomScreenModal>
+      <StatusBar style='light' />
     </GestureHandlerRootView>
   );
 }
